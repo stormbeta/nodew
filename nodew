@@ -37,8 +37,8 @@ else
     wget \
       "https://raw.githubusercontent.com/creationix/nvm/v${DEFAULT_NVM_VERSION}/nvm.sh" \
       -O "${NVM_SH}" -nc
-    if [[ $? -gt 1 ]]; then
-      echo "nvm not found locally and unable to fetched - aborting!" 1>&2
+    if [[ $? -ne 0 ]]; then
+      echo "nvm not found locally and unable to be fetched - aborting!" 1>&2
       exit 1
     fi
   fi
