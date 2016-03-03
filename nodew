@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+#TODO: Integrate with upstream nvm script
+
+#Wrapper around nvm to properly bootstrap node project environment
+COMMAND_MODE=''
+
+#Used only if nvm isn't found locally
+DEFAULT_NVM_VERSION='0.31.0'
+
+#Used only if .nvmrc not present
+DEFAULT_NODE_VERSION='4.3.2'
+
+#http://stackoverflow.com/a/2684300
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  COMMAND_MODE='enabled'
+fi
+
+if [[ -e '.nvmrc' ]]; then
+  NODE_VERSION="$(cat .nvmrc)"
+else
+  if [[ -n "${DEFAULT_NODE_VERSION}" ]]; then
+    NODE_VERSION="${DEFAULT_NODE_VERSION}"
+  else
+    NODE_VERSION="${DEFAULT_NODE_VERSION}"
+  fi
+fi
+
+if [[ -e "${HOME}/.nvm/nvm.sh" ]]; then
+  NVM_SH="${HOME}/.nvm/nvm.sh"
+elif [[ -n "${NVM_DIR}" ]]; then
+  NVM_SH="${NVM_DIR}/nvm.sh"
+else
+  NVM_SH="${HOME}/.nvm/nvm.sh"
+  if [[ ! -e "${NVM_SH}" ]]; then
+    mkdir -p "${HOME}/.nvm"
+    wget \
+      "https://raw.githubusercontent.com/creationix/nvm/v${DEFAULT_NVM_VERSION}/nvm.sh" \
+      -O "${NVM_SH}" -nc
+    if [[ $? -gt 1 ]]; then
+      echo "nvm not found locally and unable to fetched - aborting!" 1>&2
+      exit 1
+    fi
+  fi
+fi
+
+echo "Using nvm found at '${NVM_SH}'" 1>&2
+
+#Reset environment if already sourced
+unload-nodew &> /dev/null && true
+
+if [[ "$(type -t nvm)" != "function" ]]; then
+  source "${NVM_SH}" 1>&2
+fi
+if [[ "$(nvm current | sed 's/^.//')" != "${NODE_VERSION}" ]]; then
+  nvm use "${NODE_VERSION}" 1>&2 || nvm install "${NODE_VERSION}" 1>&2
+fi
+
+if [[ -e package.json ]]; then
+  FULL_LOCAL_BIN="$(pwd)/node_modules/.bin"
+  export PATH="${FULL_LOCAL_BIN}:$(echo -n "$PATH" | sed -E "s|${FULL_LOCAL_BIN}:?||")"
+
+  if [[ -z "${COMMAND_MODE}" ]]; then
+    function unload-nodew {
+      export PATH="$(echo -n "$PATH" | sed -E "s|${FULL_LOCAL_BIN}:?||")"
+    }
+
+    echo "Node environment loaded, run 'unload-nodew' to reset." 1>&2
+  fi
+fi
+
+if [[ -n "${COMMAND_MODE}" ]]; then
+  "${@}"
+fi
