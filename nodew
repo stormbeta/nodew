@@ -19,9 +19,7 @@ fi
 if [[ -e '.nvmrc' ]]; then
   NODE_VERSION="$(cat .nvmrc)"
 else
-  if [[ -n "${DEFAULT_NODE_VERSION}" ]]; then
-    NODE_VERSION="${DEFAULT_NODE_VERSION}"
-  else
+  if [[ -z "${NODE_VERSION}" ]]; then
     NODE_VERSION="${DEFAULT_NODE_VERSION}"
   fi
 fi
