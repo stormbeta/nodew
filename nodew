@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-#TODO: Integrate with upstream nvm script
-
 #Wrapper around nvm to properly bootstrap node project environment
 COMMAND_MODE=''
 
 #Used only if nvm isn't found locally
-DEFAULT_NVM_VERSION='0.31.0'
+DEFAULT_NVM_VERSION='0.32.1'
 
 #Used only if .nvmrc not present
-DEFAULT_NODE_VERSION='4.3.2'
+#TODO: dynamically lookup latest LTS release
+DEFAULT_NODE_VERSION='6.9.1'
 
 #http://stackoverflow.com/a/2684300
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -54,13 +53,18 @@ if [[ "$(nvm current | sed 's/^.//')" != "${NODE_VERSION}" ]]; then
   nvm use "${NODE_VERSION}" 1>&2 || nvm install "${NODE_VERSION}" 1>&2
 fi
 
+mkdir -p "$(pwd)/node_modules/.bin"
+
+LOCAL_NODE_BIN="$(pwd)/node_modules/.bin"
+ln -fs "$(which node)" "${LOCAL_NODE_BIN}/node"
+ln -fs "$(which npm)" "${LOCAL_NODE_BIN}/npm"
+
 if [[ -e package.json ]]; then
-  FULL_LOCAL_BIN="$(pwd)/node_modules/.bin"
-  export PATH="${FULL_LOCAL_BIN}:$(echo -n "$PATH" | sed -E "s|${FULL_LOCAL_BIN}:?||")"
+  export PATH="${LOCAL_NODE_BIN}:$(echo -n "$PATH" | sed -E "s|${LOCAL_NODE_BIN}:?||")"
 
   if [[ -z "${COMMAND_MODE}" ]]; then
     function unload-nodew {
-      export PATH="$(echo -n "$PATH" | sed -E "s|${FULL_LOCAL_BIN}:?||")"
+      export PATH="$(echo -n "$PATH" | sed -E "s|${LOCAL_NODE_BIN}:?||")"
     }
 
     echo "Node environment loaded, run 'unload-nodew' to reset." 1>&2
