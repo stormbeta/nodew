@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 
-#Wrapper around nvm to properly bootstrap node project environment
+# Wrapper around nvm to properly bootstrap node project environment
 COMMAND_MODE=''
 
-#Used only if nvm isn't found locally
-DEFAULT_NVM_VERSION='0.32.1'
+# Used only if nvm isn't found locally
+DEFAULT_NVM_VERSION='0.33.2'
 
-#Used only if .nvmrc not present
-#TODO: dynamically lookup latest LTS release
-DEFAULT_NODE_VERSION='6.9.1'
+# Does not override .nvmrc
+DEFAULT_NODE_VERSION='lts/*'
 
-#http://stackoverflow.com/a/2684300
+# http://stackoverflow.com/a/2684300
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   COMMAND_MODE='enabled'
 fi
 
-if [[ -e '.nvmrc' ]]; then
+if [[ -e ".nvmrc" ]]; then
   NODE_VERSION="$(cat .nvmrc)"
 else
   if [[ -z "${NODE_VERSION}" ]]; then
@@ -46,9 +45,11 @@ echo "Using nvm found at '${NVM_SH}'" 1>&2
 #Reset environment if already sourced
 unload-nodew &> /dev/null && true
 
+# TODO: Update nvm if it's old
 if [[ "$(type -t nvm)" != "function" ]]; then
   source "${NVM_SH}" 1>&2
 fi
+
 if [[ "$(nvm current | sed 's/^.//')" != "${NODE_VERSION}" ]]; then
   nvm use "${NODE_VERSION}" 1>&2 || nvm install "${NODE_VERSION}" 1>&2
 fi
@@ -56,8 +57,8 @@ fi
 mkdir -p "$(pwd)/node_modules/.bin"
 
 LOCAL_NODE_BIN="$(pwd)/node_modules/.bin"
-ln -fs "$(which node)" "${LOCAL_NODE_BIN}/node"
-ln -fs "$(which npm)" "${LOCAL_NODE_BIN}/npm"
+ln -sf "$(which node)" "${LOCAL_NODE_BIN}/node"
+ln -sf "$(which npm)" "${LOCAL_NODE_BIN}/npm"
 
 if [[ -e package.json ]]; then
   export PATH="${LOCAL_NODE_BIN}:$(echo -n "$PATH" | sed -E "s|${LOCAL_NODE_BIN}:?||")"
