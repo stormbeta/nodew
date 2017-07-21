@@ -1,4 +1,4 @@
-#nodew
+# nodew
 
 Simple wrapper around `nvm`.
 
@@ -9,8 +9,9 @@ Features:
 * Includes project-local utilities (via `node_modules/.bin`)
 * Sourcing from another project unloads the previous project automatically
 * Can be used as a direct command wrapper, not just sourced
+* Uses latest LTS release of node by default
 
-##Usage
+## Usage
 
 Put `nodew` in your project, and simply source it to setup your project's node environment (defaults to current Node LTS version).
 
@@ -20,7 +21,7 @@ Put `nodew` in your project, and simply source it to setup your project's node e
 
 * `./nodew COMMAND` will run against the project's node environment without sourcing it into your shell
 
-##Future
+## Future
 
 * Planned to integrate with the ReadyTalk [Gradle JS plugin]
 
