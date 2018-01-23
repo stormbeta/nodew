@@ -4,13 +4,31 @@
 COMMAND_MODE=''
 
 # Used only if nvm isn't found locally
-DEFAULT_NVM_VERSION='0.33.2'
+# NOTE: 0.33.x is the minimum supported version
+DEFAULT_NVM_VERSION='0.33.8'
 
 # Does not override .nvmrc
 DEFAULT_NODE_VERSION='lts/*'
 
 # http://stackoverflow.com/a/2684300
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  if [[ -z "$1" ]]; then
+    read -p "Update nodew? (Y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      echo "Updating nodew..." 1>&2
+      set -o pipefail
+      cp "$0" "/tmp/$0.backup"
+      curl --silent https://raw.githubusercontent.com/stormbeta/nodew/master/nodew > "$0"
+      if [[ $? -ne 0 ]]; then
+        echo "$0 update failed!" 1>&2
+        cp "/tmp/$0.backup" "$0"
+      else
+        echo "$0 update succeeded!" 1>&2
+      fi
+    fi
+    exit 0
+  fi
   COMMAND_MODE='enabled'
 fi
 
@@ -60,7 +78,7 @@ LOCAL_NODE_BIN="$(pwd)/node_modules/.bin"
 ln -sf "$(which node)" "${LOCAL_NODE_BIN}/node"
 ln -sf "$(which npm)" "${LOCAL_NODE_BIN}/npm"
 
-if [[ -e package.json ]]; then
+if [[ -e package.json || -e package-lock.json ]]; then
   export PATH="${LOCAL_NODE_BIN}:$(echo -n "$PATH" | sed -E "s|${LOCAL_NODE_BIN}:?||")"
 
   if [[ -z "${COMMAND_MODE}" ]]; then
