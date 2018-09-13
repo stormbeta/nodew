@@ -5,7 +5,7 @@ COMMAND_MODE=''
 
 # Used only if nvm isn't found locally
 # NOTE: 0.33.x is the minimum supported version
-DEFAULT_NVM_VERSION='0.33.8'
+DEFAULT_NVM_VERSION='0.33.11'
 
 # Does not override .nvmrc
 DEFAULT_NODE_VERSION='lts/*'
@@ -19,8 +19,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
       echo "Updating nodew..." 1>&2
       set -o pipefail
       cp "$0" "/tmp/$0.backup"
-      curl --silent https://raw.githubusercontent.com/stormbeta/nodew/master/nodew > "$0"
-      if [[ $? -ne 0 ]]; then
+      if ! curl --silent \
+        https://raw.githubusercontent.com/stormbeta/nodew/master/nodew > "$0"; then
         echo "$0 update failed!" 1>&2
         cp "/tmp/$0.backup" "$0"
       else
@@ -65,18 +65,18 @@ unload-nodew &> /dev/null && true
 
 # TODO: Update nvm if it's old
 if [[ "$(type -t nvm)" != "function" ]]; then
-  source "${NVM_SH}" 1>&2
+  source "$NVM_SH" 1>&2
 fi
 
-if [[ "$(nvm current | sed 's/^.//')" != "${NODE_VERSION}" ]]; then
-  nvm use "${NODE_VERSION}" 1>&2 || nvm install "${NODE_VERSION}" 1>&2
+if [[ "$(nvm current | sed 's/^.//')" != "$NODE_VERSION" ]]; then
+  nvm use "$NODE_VERSION" 1>&2 || nvm install "$NODE_VERSION" 1>&2
 fi
 
 mkdir -p "$(pwd)/node_modules/.bin"
 
 LOCAL_NODE_BIN="$(pwd)/node_modules/.bin"
-ln -sf "$(which node)" "${LOCAL_NODE_BIN}/node"
-ln -sf "$(which npm)" "${LOCAL_NODE_BIN}/npm"
+ln -sf "$(command -v node)" "${LOCAL_NODE_BIN}/node"
+ln -sf "$(command -v npm)" "${LOCAL_NODE_BIN}/npm"
 
 if [[ -e package.json || -e package-lock.json ]]; then
   export PATH="${LOCAL_NODE_BIN}:$(echo -n "$PATH" | sed -E "s|${LOCAL_NODE_BIN}:?||")"
